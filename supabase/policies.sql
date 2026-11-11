@@ -42,12 +42,8 @@ create policy "members read letters" on public.letters
 drop policy if exists "send own letters" on public.letters;
 create policy "send own letters" on public.letters
   for insert to authenticated
-  with check (
-    public.is_member()
-    and sender_id = auth.uid()
-    and (recipient_id is null or exists (select 1 from public.users u where u.id = recipient_id))
-    and (reply_to_id is null or exists (select 1 from public.letters l where l.id = reply_to_id))
-  );
+  -- recipient_id / reply_to_id are already validated by foreign keys.
+  with check (public.is_member() and sender_id = auth.uid());
 
 drop policy if exists "edit own letters" on public.letters;
 create policy "edit own letters" on public.letters
