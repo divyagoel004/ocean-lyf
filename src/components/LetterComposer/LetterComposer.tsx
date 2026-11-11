@@ -25,6 +25,17 @@ interface LocalDraft {
 
 const BOTH = '__both__';
 
+/** Supabase errors are plain objects (not Error instances) — pull the useful text out of either. */
+function errorText(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === 'object') {
+    const o = e as { message?: string; details?: string; hint?: string; code?: string };
+    const parts = [o.message, o.details, o.hint, o.code && `code ${o.code}`].filter(Boolean);
+    if (parts.length) return parts.join(' — ');
+  }
+  return 'unknown error';
+}
+
 export default function LetterComposer({ me, partner, replyTo, replyToName, onClose, onRelease }: Props) {
   const replyId = replyTo?.id ?? null;
   const localKey = `hii-mikku:draft:${me.id}:${replyId ?? 'new'}`;
@@ -159,7 +170,7 @@ export default function LetterComposer({ me, partner, replyTo, replyToName, onCl
       setBusy(null);
       setError(
         navigator.onLine
-          ? `The bottle couldn’t be released: ${e instanceof Error ? e.message : 'unknown error'}. Your words are safe — try again.`
+          ? `The bottle couldn’t be released: ${errorText(e)}. Your words are safe — try again.`
           : 'You seem to be offline. Your words are safe here — try again when the connection returns.',
       );
     }
