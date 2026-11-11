@@ -1,0 +1,273 @@
+/* ============ sky + sea ============ */
+.ocean-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(
+    to bottom,
+    #030715 0%,
+    #060f2b 22%,
+    #0d1a45 40%,
+    #26306a 52%,
+    #4a4a86 58%,
+    #7d6aa6 62%
+  );
+}
+.ocean-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ---------- clouds ---------- */
+.clouds {
+  position: absolute;
+  inset: 0 0 40% 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cloud {
+  position: absolute;
+  left: -40%;
+  width: 46vw;
+  min-width: 260px;
+  height: 11vh;
+  min-height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(190, 180, 235, 0.3), rgba(160, 150, 215, 0.12) 55%, transparent 72%);
+  filter: blur(14px);
+  will-change: transform;
+  animation: cloud-drift linear infinite;
+}
+.cloud.c1 { top: 12%; animation-duration: 170s; animation-delay: -60s; }
+.cloud.c2 { top: 30%; width: 60vw; height: 13vh; opacity: 0.8; animation-duration: 230s; animation-delay: -150s; }
+.cloud.c3 { top: 5%; width: 38vw; opacity: 0.65; animation-duration: 140s; animation-delay: -20s; }
+@keyframes cloud-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(190vw, 0, 0); }
+}
+
+/* ---------- ocean page ---------- */
+.ocean-page {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 55%;
+}
+
+/* The water band bottles live in. Keep in sync with WATER_TOP / WATER_H in BottleDrop.tsx */
+.bottle-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 44%;
+  height: 50%;
+  z-index: 4;
+  pointer-events: none;
+}
+.bottle-pos {
+  --w: calc(var(--bottle-base) * var(--depth, 1));
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.bottle-drift {
+  position: absolute;
+  left: calc(var(--w) / -2);
+  top: calc(var(--w) / -4);
+  width: var(--w);
+  pointer-events: auto;
+  will-change: transform;
+  animation: drift var(--drift-dur, 36s) ease-in-out infinite alternate;
+  animation-delay: var(--drift-delay, 0s);
+}
+@keyframes drift {
+  from { transform: translate3d(calc(var(--drift-amp, 3vw) * -1), 0, 0); }
+  to { transform: translate3d(var(--drift-amp, 3vw), 0, 0); }
+}
+.bottle-bob {
+  will-change: transform;
+  animation: bob var(--bob-dur, 5.6s) ease-in-out infinite;
+  animation-delay: var(--bob-delay, 0s);
+}
+@keyframes bob {
+  0%   { transform: translate3d(0, 0, 0) rotate(calc(var(--tilt, 0deg) - 4deg)); }
+  25%  { transform: translate3d(0, -5px, 0) rotate(calc(var(--tilt, 0deg) + 1deg)); }
+  50%  { transform: translate3d(0, -10px, 0) rotate(calc(var(--tilt, 0deg) + 5deg)); }
+  75%  { transform: translate3d(0, -4px, 0) rotate(calc(var(--tilt, 0deg) - 1deg)); }
+  100% { transform: translate3d(0, 0, 0) rotate(calc(var(--tilt, 0deg) - 4deg)); }
+}
+.bottle-bob.arrive {
+  animation: bob var(--bob-dur, 5.6s) ease-in-out infinite, arrive 2.6s cubic-bezier(0.22, 1, 0.36, 1) 1;
+}
+@keyframes arrive {
+  0% { opacity: 0; filter: brightness(2) drop-shadow(0 0 30px rgba(255, 220, 240, 1)); scale: 1.8; translate: 0 -80px; }
+  60% { opacity: 1; scale: 1.1; translate: 0 4px; }
+  100% { opacity: 1; filter: none; scale: 1; translate: 0 0; }
+}
+
+.bottle-btn {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer; /* a clear "you can open this" affordance */
+}
+.bottle-svg {
+  display: block;
+  overflow: visible;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.45s;
+  filter: drop-shadow(0 6px 8px rgba(0, 10, 30, 0.45));
+}
+.bottle-btn:hover .bottle-svg,
+.bottle-btn:focus-visible .bottle-svg {
+  transform: scale(1.14);
+  filter: drop-shadow(0 0 14px rgba(160, 255, 240, 0.9)) drop-shadow(0 0 30px rgba(190, 170, 255, 0.55));
+}
+.bottle-btn:focus-visible {
+  outline-offset: 6px;
+}
+/* ripple ring where glass meets water */
+.bottle-wake {
+  position: absolute;
+  left: -6%;
+  right: -6%;
+  bottom: -10%;
+  height: 26%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(200, 245, 245, 0.4), rgba(120, 220, 220, 0.12) 55%, transparent 72%);
+  animation: wake 4.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes wake {
+  0%, 100% { transform: scale(0.92); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+.bottle-unread {
+  position: absolute;
+  top: -4px;
+  right: 14%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--blush);
+  box-shadow: 0 0 12px 3px rgba(242, 184, 198, 0.9);
+  animation: unread-pulse 2s ease-in-out infinite;
+}
+@keyframes unread-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.7; }
+}
+.bottle-tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 14px);
+  transform: translate(-50%, 6px);
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  color: var(--moon);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 3;
+}
+.bottle-drift:hover .bottle-tip,
+.bottle-drift:focus-within .bottle-tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+@media (hover: none) {
+  .bottle-tip {
+    display: none;
+  }
+}
+
+/* ---------- release animation ---------- */
+.bottle-drop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  overflow: hidden;
+}
+.bottle-drop-item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+  filter: drop-shadow(0 0 18px rgba(190, 255, 245, 0.6));
+}
+.splash-ring {
+  position: absolute;
+  width: 140px;
+  height: 36px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid rgba(220, 255, 250, 0.7);
+  box-shadow: 0 0 20px rgba(160, 255, 240, 0.5);
+}
+
+/* ---------- ocean status notes ---------- */
+.ocean-note {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  width: min(90vw, 24rem);
+  padding: 1.5rem;
+  border-radius: 24px;
+  text-align: center;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.ocean-note p {
+  margin: 0;
+}
+.ocean-note small {
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.offline-pill {
+  position: absolute;
+  top: calc(4.4rem + var(--safe-t));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloud,
+  .bottle-drift,
+  .bottle-bob,
+  .bottle-wake,
+  .bottle-unread {
+    animation: none !important;
+  }
+}
