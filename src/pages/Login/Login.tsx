@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader2, Mail } from 'lucide-react';
+import { KeyRound, Loader2, Mail } from 'lucide-react';
 import OceanBackdrop from '../../components/Ocean/OceanBackdrop';
 import SetupNotice from '../../components/Navigation/SetupNotice';
 import { useAuth } from '../../hooks/useAuth';
@@ -12,6 +12,8 @@ export default function Login() {
   const { status } = useAuth();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<'link' | 'password'>('link');
   const [phase, setPhase] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
@@ -27,6 +29,17 @@ export default function Login() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (mode === 'password') {
+      if (phase === 'sending') return;
+      setPhase('sending');
+      setError(null);
+      const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+      if (err) {
+        setPhase('idle');
+        setError(/invalid login/i.test(err.message) ? 'Wrong email or password.' : err.message);
+      }
+      return; // on success the auth listener signs us in and we redirect to the ocean
+    }
     if (phase === 'sending' || cooldown > 0) return;
     setPhase('sending');
     setError(null);
@@ -88,26 +101,61 @@ export default function Login() {
                   placeholder="you@example.com"
                 />
               </label>
-              <label className="field">
-                <span>
-                  What should we call you? <small>(first time only)</small>
-                </span>
-                <input
-                  type="text"
-                  autoComplete="nickname"
-                  maxLength={40}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                />
-              </label>
+              {mode === 'password' ? (
+                <label className="field">
+                  <span>Password</span>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Your password"
+                  />
+                </label>
+              ) : (
+                <label className="field">
+                  <span>
+                    What should we call you? <small>(first time only)</small>
+                  </span>
+                  <input
+                    type="text"
+                    autoComplete="nickname"
+                    maxLength={40}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
+                  />
+                </label>
+              )}
               {error && (
                 <p className="form-msg error" role="alert">
                   {error}
                 </p>
               )}
-              <button type="submit" className="btn primary wide" disabled={phase === 'sending' || !email}>
-                {phase === 'sending' ? <Loader2 size={16} className="spin" /> : <Mail size={16} />} Send me a magic link
+              <button
+                type="submit"
+                className="btn primary wide"
+                disabled={phase === 'sending' || !email || (mode === 'password' && !password)}
+              >
+                {phase === 'sending' ? (
+                  <Loader2 size={16} className="spin" />
+                ) : mode === 'password' ? (
+                  <KeyRound size={16} />
+                ) : (
+                  <Mail size={16} />
+                )}{' '}
+                {mode === 'password' ? 'Sign in' : 'Send me a magic link'}
+              </button>
+              <button
+                type="button"
+                className="btn ghost wide"
+                onClick={() => {
+                  setMode(mode === 'link' ? 'password' : 'link');
+                  setError(null);
+                }}
+              >
+                {mode === 'link' ? 'Use a password instead' : 'Use a magic link instead'}
               </button>
             </form>
           )}
